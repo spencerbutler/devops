@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+# simple wrapper ala puppetboard
+# Spencer Butler <spencerb honeycomb.net>
+
+HELP=$(echo "
+  $0  <action> 
+
+  --unreported [range] [node]
+    range: can be in the form of <60s 60m 2h 1d> defaults to 2h
+    node: hostname or regex (optional)
+  --failed
+    get a list of nodes that failed their last puppet run
+  --inactive
+    get a list of nodes that have become inactive
+  --query \"valid PSQL query\"
+    freeform query
+")
+
+PUPPETDB=puppet.example.com
+PORT=8081
+
+puppet_dir=/etc/puppetlabs/puppet
+hostcert="${puppet_dir}/ssl/certs/$(hostname).pem"
+hostprivkey="${puppet_dir}/ssl/private_keys/$(hostname).pem"
+localcacert="${puppet_dir}/ssl/certs/ca.pem"
+
+now="$(date -u +%s)"
+s=1
+m="$[$s*60]"
+h="$[$m*60]"
+d="$[$h*24]"
+
+#----------#
+get_range() {
+  report_range="$1"
+  report_unreported="$[ $now - $report_range ]"
+  report_timestamp="$(date -u -d @$report_unreported +'%Y-%m-%d %H:%M:%S')"
+}
+#----------#
+
+case "$1" in
+  --inactive)
+    shift
+    node="$1"
+    QUERY="query=nodes[certname, report_timestamp]
+          { node_state = 'inactive' and certname ~ \"$node\" }"
+    ;;
+
+  --failed)
+    shift
+    node="$1"
+    QUERY="query=nodes[certname, report_timestamp]
+          { latest_report_status = 'failed' and certname ~ \"$node\" }"
+    ;;
+
+  --unreported)
+    shift
+    if [[ "$1" =~ ^([0-9]{1,})([smhd])$ ]]; then
+      key="${BASH_REMATCH[2]}"
+      val="${BASH_REMATCH[1]}"
+      node="$2"
+      get_range "$[ ${key} * ${val} ]" 
+      QUERY="query= nodes [certname, report_timestamp] 
+            { report_timestamp  <= \"$report_timestamp\" and certname ~ \"$node\" }"
+
+    else
+      node="$1"
+      get_range "$[ ${h} * 2 ]" 
+      QUERY="query= nodes [certname, report_timestamp] 
+            { report_timestamp  <= \"$report_timestamp\" and certname ~ \"$node\" }"
+    fi
+    ;;
+
+  --query)
+    shift
+    QUERY="$@"
+    ;;
+
+  **)
+    echo -e "${HELP}"
+    exit
+    ;;
+esac
+
+curl -s -X GET https://${PUPPETDB}:${PORT}/pdb/query/v4 \
+  --tlsv1 \
+  --cert   $hostcert \
+  --key    $hostprivkey \
+  --cacert $localcacert \
+  --data-urlencode 'pretty=true' \
+  --data-urlencode "${QUERY}"
+
