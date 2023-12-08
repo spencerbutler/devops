@@ -12,7 +12,6 @@ EOF
 
 packages="
 qemu-guest-agent
-neovim
 tmux
 npm
 jq
@@ -26,4 +25,5 @@ apt-get install -y $packages
 apt-get clean
 
 # make nvim vim
-update-alternatives --install $(which vim) vim $(which nvim) 99
+# TODO(spencer) find a better way
+#update-alternatives --install $(which vim) vim $(which nvim) 99
