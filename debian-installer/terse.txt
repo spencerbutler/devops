@@ -1,0 +1,47 @@
+d-i debian-installer/locale string en_US.utf8       <==########## is probably a problem, that locale doesn't exist yet
+d-i keyboard-configuration/xkb-keymap select us
+d-i keyboard-configuration/toggle select No toggling <==##########
+d-i netcfg/choose_interface select auto
+d-i netcfg/get_hostname string template-debian-minimal
+d-i netcfg/get_domain string crooked-stage.tcos.us
+d-i netcfg/wireless_wep string
+d-i mirror/country string US
+d-i mirror/http/hostname string http.us.debian.org
+d-i mirror/http/directory string /debian
+d-i mirror/http/proxy string <==########## remove
+d-i mirror/suite string stable
+d-i passwd/root-login boolean false
+d-i passwd/user-fullname string Spencer TCOS <==########## variable
+d-i passwd/username string spencer <==########## variable
+d-i passwd/user-password password spencer <==########## variable
+d-i passwd/user-password-again password spencer <==########## variable or remove
+d-i clock-setup/utc boolean true
+d-i time/zone string US/Central <==########## variable
+d-i clock-setup/ntp boolean true
+d-i partman-auto/disk string /dev/sda
+d-i partman-auto/method string regular
+d-i partman-auto-lvm/guided_size string max
+d-i partman-lvm/device_remove_lvm boolean true
+d-i partman-md/device_remove_md boolean true
+d-i partman-lvm/confirm boolean true
+d-i partman-lvm/confirm_nooverwrite boolean true
+d-i partman-auto/choose_recipe select atomic
+d-i partman-partitioning/confirm_write_new_label boolean true
+d-i partman/choose_partition select finish
+d-i partman/confirm boolean true
+d-i partman/confirm_nooverwrite boolean true
+d-i partman-md/confirm boolean true
+d-i partman-partitioning/confirm_write_new_label boolean true
+d-i partman/choose_partition select finish
+d-i partman/confirm boolean true
+d-i partman/confirm_nooverwrite boolean true
+d-i base-installer/kernel/image string linux-image-686
+d-i apt-setup/cdrom/set-first boolean false
+d-i apt-setup/disable-cdrom-entries boolean true
+d-i apt-setup/services-select multiselect security, updates
+d-i apt-setup/security_host string security.debian.org
+d-i pkgsel/include string openssh-server build-essential \
+d-i pkgsel/upgrade selecta safe-upgrade
+d-i grub-installer/only_debian boolean true
+d-i grub-installer/with_other_os boolean true
+d-i finish-install/reboot_in_progress note
