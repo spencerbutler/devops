@@ -4,7 +4,7 @@
 
 [ ! $(id -u) = 0 ] && { echo "Use root."; exit 1; }
 
-# Disable suggestiongs and recommends
+# Disable suggests and recommends
 cat > /etc/apt/apt.conf.d/01norecommend << EOF
 APT::Install-Recommends "0";
 APT::Install-Suggests "0";
